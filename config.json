@@ -11,7 +11,7 @@
     "wlvrlt": {
       "name": "wlvrlt-realty-ai",
       "resource_group_name": "rg-static-web-wlvrlt",
-      "location": "eastus2",
+      "location": "eastus",
       "sku_tier": "Free",
       "sku_size": "Free",
       "domain": "wlvrlt.com",
