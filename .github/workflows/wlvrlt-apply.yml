@@ -30,7 +30,7 @@ env:
 jobs:
   apply:
     name: Terraform apply (${{ inputs.site }})
-    runs-on: [self-hosted, gpu01]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 

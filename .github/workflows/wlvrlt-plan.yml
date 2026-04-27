@@ -24,7 +24,7 @@ env:
 jobs:
   plan:
     name: Terraform plan (wlvrlt)
-    runs-on: [self-hosted, gpu01]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
