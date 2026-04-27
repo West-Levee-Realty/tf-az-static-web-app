@@ -1,0 +1,53 @@
+name: WLVRLT Static Web App - Plan
+
+on:
+  pull_request:
+    paths:
+      - 'modules/**'
+      - 'sites/wlvrlt/**'
+      - 'config.json'
+      - '.github/workflows/wlvrlt-*.yml'
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+env:
+  ARM_USE_OIDC: 'true'
+  ARM_USE_AZUREAD: 'true'
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  TF_VAR_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+
+jobs:
+  plan:
+    name: Terraform plan (wlvrlt)
+    runs-on: [self-hosted, gpu01]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+
+      - name: Generate tfvars
+        run: scripts/generate-tfvars.sh wlvrlt
+
+      - name: Terraform init
+        working-directory: sites/wlvrlt/terraform
+        run: |
+          set -e
+          RG=$(jq -r '.state_backend.resource_group_name' ../../../config.json)
+          SA=$(jq -r '.state_backend.storage_account_name' ../../../config.json)
+          C=$(jq -r '.state_backend.container_name' ../../../config.json)
+          terraform init -reconfigure \
+            -backend-config="resource_group_name=$RG" \
+            -backend-config="storage_account_name=$SA" \
+            -backend-config="container_name=$C" \
+            -backend-config="key=static-web-app-wlvrlt.tfstate"
+
+      - name: Terraform plan
+        working-directory: sites/wlvrlt/terraform
+        run: terraform plan -input=false -no-color

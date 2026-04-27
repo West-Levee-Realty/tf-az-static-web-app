@@ -1,0 +1,83 @@
+name: WLVRLT Static Web App - Apply
+
+on:
+  workflow_dispatch:
+    inputs:
+      site:
+        description: 'Site to deploy (key under sites in config.json)'
+        required: true
+        default: 'wlvrlt'
+        type: string
+      bind_apex:
+        description: 'Bind apex domain (set true on second apply after www succeeds)'
+        required: false
+        default: 'false'
+        type: choice
+        options: ['false', 'true']
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  ARM_USE_OIDC: 'true'
+  ARM_USE_AZUREAD: 'true'
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  TF_VAR_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+
+jobs:
+  apply:
+    name: Terraform apply (${{ inputs.site }})
+    runs-on: [self-hosted, gpu01]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+
+      - name: Generate tfvars
+        run: scripts/generate-tfvars.sh "${{ inputs.site }}"
+
+      - name: Override bind_apex from input
+        run: |
+          jq --argjson b ${{ inputs.bind_apex }} '. + {bind_apex: $b}' \
+            sites/${{ inputs.site }}/terraform/terraform.auto.tfvars.json \
+            > /tmp/tfv && mv /tmp/tfv sites/${{ inputs.site }}/terraform/terraform.auto.tfvars.json
+
+      - name: Terraform init
+        working-directory: sites/${{ inputs.site }}/terraform
+        run: |
+          set -e
+          RG=$(jq -r '.state_backend.resource_group_name' ../../../config.json)
+          SA=$(jq -r '.state_backend.storage_account_name' ../../../config.json)
+          C=$(jq -r '.state_backend.container_name' ../../../config.json)
+          terraform init -reconfigure \
+            -backend-config="resource_group_name=$RG" \
+            -backend-config="storage_account_name=$SA" \
+            -backend-config="container_name=$C" \
+            -backend-config="key=static-web-app-${{ inputs.site }}.tfstate"
+
+      - name: Terraform apply
+        working-directory: sites/${{ inputs.site }}/terraform
+        run: terraform apply -auto-approve -input=false
+
+      - name: Read deployment token
+        id: token
+        working-directory: sites/${{ inputs.site }}/terraform
+        run: |
+          TOKEN=$(terraform output -raw deployment_token)
+          echo "::add-mask::$TOKEN"
+          echo "token=$TOKEN" >> $GITHUB_OUTPUT
+
+      - name: Deploy site content
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ steps.token.outputs.token }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: upload
+          app_location: sites/${{ inputs.site }}/content
+          skip_app_build: true
+          skip_api_build: true

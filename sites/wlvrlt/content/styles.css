@@ -1,0 +1,58 @@
+:root {
+  --bg: #0a0e1a;
+  --fg: #e8edf5;
+  --accent: #6db0ff;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: linear-gradient(135deg, #0a0e1a 0%, #102342 100%);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+
+main {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+}
+
+h1 {
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  font-weight: 200;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.25rem 0;
+}
+
+h1 sub {
+  font-size: 0.45em;
+  font-weight: 600;
+  color: var(--accent);
+  vertical-align: sub;
+  margin-left: 0.05em;
+  letter-spacing: 0.05em;
+}
+
+.tagline {
+  font-size: 1.15rem;
+  opacity: 0.7;
+  margin: 0 0 3rem 0;
+  font-weight: 300;
+}
+
+.contact a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.contact a:hover { border-bottom-color: var(--accent); }

@@ -1,0 +1,30 @@
+{
+  "_comment": "Source of truth for tf-az-static-web-app. NO hardcoded values in TF/workflows.",
+  "tenant_id": "REPLACE_FROM_GH_SECRETS_AT_RUNTIME",
+  "subscription_id": "71a7a3d9-92d6-4bc4-a294-7d932f949a85",
+  "state_backend": {
+    "resource_group_name": "rg-sttfstate16p-wlvrlt",
+    "storage_account_name": "sttfstate16p",
+    "container_name": "tfstate"
+  },
+  "sites": {
+    "wlvrlt": {
+      "name": "wlvrlt-realty-ai",
+      "resource_group_name": "rg-static-web-wlvrlt",
+      "location": "eastus2",
+      "sku_tier": "Free",
+      "sku_size": "Free",
+      "domain": "wlvrlt.com",
+      "custom_domains": ["wlvrlt.com", "www.wlvrlt.com"],
+      "dns_zone_resource_group": "rg-core-dns-wlvrlt",
+      "dns_zone_name": "wlvrlt.com",
+      "tags": {
+        "managed_by": "terraform",
+        "environment": "prod",
+        "org": "west-levee-realty",
+        "owner": "support@wlvrlt.com",
+        "purpose": "marketing-site"
+      }
+    }
+  }
+}
